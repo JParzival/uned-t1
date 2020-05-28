@@ -1,0 +1,357 @@
+---
+title: "Jorge de Andrés González - Módulo 1"
+author: "Jorge de Andrés"
+date: "2/3/2020"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# EXAMEN PRÁCTICO MÓDULO 1
+
+Puesto que se trata de una prueba de Introducción a R:
+
+  * Se deben emplear las funciones básicas de R para tratar los datos. Así pues, no está permitido usar otros paquetes, como: `dplyr`, `data.table`, etc.
+  * Para generar los gráficos, se deben emplear exclusivamente las funciones propias del paquete `graphics`. Por lo tanto, no está permitido utilizar otros paquetes, como: `ggplot2`, `lattice`, etc.
+  
+***
+  
+## Ejercicios
+
+### Vectores
+
+1. Cree el vector A utilizando la función seq, de tal modo que se obtenga el siguiente resultado: 10, 8, 6, 4, 2, 0, -2, -4, -6.
+¿Qué longitud tiene este vector? ¿Cuál es su suma? ¿Cuál es su valor medio? ¿Cuál es su error típico?
+El error típico se obtiene dividiendo la desviación típica entre la raíz cuadrada del tamaño de la muestra (número de elementos)
+
+```{r vectores_creacionvector}
+
+A <- seq(10, -6, by = -2)
+A
+
+```
+```{r vectores_calculosvector}
+
+print(paste0("La longitud del vector es: ", length(A), ". La suma del vector es: ", sum(A), ". La media del vector es: ", mean(A), ". El error típico es: ", sd(A)/sqrt( length(A) ) ))
+
+```
+
+2. Utilizando las funciones rep y seq, cree el vector B, con los siguientes datos: 0, 0, 0, 0, 0, 1, 2.5, 4, 5.5.
+Calcule: la suma de A y B, la diferencia entre A y B, $\sqrt{A^{2} + B^{2}}$
+
+```{r vectores_creacionrepseq}
+
+B <- c(rep(0,5), seq(1,5.5,1.5))
+B
+
+```
+
+```{r vectores_calculosvectorrepseq}
+
+print(A+B)
+print(A-B)
+print(sqrt((A^2 + B^2)))
+
+```
+
+### Matrices
+
+Se dispone de una tabla de datos:
+
+
+3. Cree la matriz M con estos datos, indicando el nombre de cada columna. Muestre la dimensión de la matriz. Utilizando la función apply, obtenga un promedio de los resultados por columna
+
+```{r matrices_creacionmatriz}
+
+M <- matrix ( c(74, 85, 58, 80, 1.68, 1.83, 1.58, 1.72, 22, 25, 21, 20),
+              nrow = 4,
+              ncol= 3)
+
+colnames(M) <- c("PESO", "ESTATURA", "EDAD")
+
+print(dim(M))
+
+apply(M, 2, function(x) mean(x))
+
+```
+
+### Dataframes
+
+4. Con los datos de la matriz anterior, cree el dataframe datos.
+   Añada dos columnas, con el nombre de los individuos: "Pedro", "José", "María", "Javier"; y el sexo: "Hombre" y "Mujer".
+   Añada un nuevo individuo al conjunto de datos: "Ana", peso=70, estatura=1.72 y edad=24.
+   La variable nombre es de tipo carácter, sexo es un factor y el resto son numéricas.
+   Muestre la estructura del dataframe datos.
+   
+```{r dataframes_creaciondataframe}
+
+nombre <- c("Pedro", "José", "María", "Javier")
+sexo <- c("Hombre", "Hombre", "Mujer", "Hombre")
+
+datos <- cbind(as.data.frame(M), 
+               nombre, 
+               sexo)
+
+```
+
+```{r dataframes_adicionindividuo}
+
+individuo <- data.frame(PESO=70, ESTATURA=1.72, EDAD=24, nombre="Ana", sexo="Mujer")
+datos <- rbind(datos, individuo)
+
+```
+
+```{r dataframes_estructura}
+
+datos$PESO <- as.numeric(as.character(datos$PESO))
+datos$ESTATURA <- as.numeric(as.character(datos$ESTATURA))
+datos$EDAD <- as.numeric(as.character(datos$EDAD))
+datos$nombre <- as.character(datos$nombre)
+datos$sexo <- as.factor(datos$sexo)
+
+str(datos)
+
+```
+
+5. Del dataframe creado, extraiga: el peso de Ana, todos los nombres y los datos de Javier.
+   Añada una columna al dataframe datos, denominada ALTURA. De tal modo que, si el individuo mide más 1.78, tendrá el valor "Alto"; y de lo contrario, tendrá el valor "Normal".
+   
+```{r dataframes_extracciondatos1}
+
+datos [datos$nombre == "Ana", "PESO"]
+
+```
+
+```{r dataframes_extracciondatos2}
+
+datos$nombre
+
+```
+
+
+```{r dataframes_extracciondatos3}
+
+datos [datos$nombre == "Javier", ]
+
+```
+
+```{r dataframes_esalto}
+
+datos$ALTURA <- ifelse( datos$ESTATURA > 1.78, "Alto", "Normal" )
+str(datos)
+
+```
+
+### Listas
+
+6. Cree la lista L, con todos los objetos que ha creado. Encuentre en la lista, los valores de A que cumplen la condición A+2<0, el valor [3,2] de la matriz M, y los datos de Ana del dataframe datos.
+
+```{r listas_creacionlista}
+
+L <- list (A, B, M, datos)
+L
+
+```
+
+```{r listas_cumplencondicion}
+
+sapply( L[[1]], function(x) x + 2 < 0 )
+L[[1]][A + 2 < 0]
+
+```
+
+```{r listas_valormatriz}
+
+print(paste0("El valor es: ", L[[3]][3,2]," corresponde a la columna ",names(L[[3]][3,2])))
+
+```
+
+```{r listas_valorana}
+
+L[[4]][ L[[4]]$nombre == "Ana", ]
+
+```
+
+### Funciones y Bucles
+
+7. Cree la función normalizar, que realice la normalización estándar (restar la media y dividir por el error típico) y la normalización min-max (restar el mínimo y dividir por la diferencia entre el máximo y el mínimo). 
+   Dicha función devolverá una lista.
+   Utilice esta función empleando como argumento el PESO del dataframe datos, y después empleando la ESTATURA.
+   
+```{r funcion_normalizacion}
+
+normalizador <- function(x)
+{
+  min <- min(x)
+  max <- max(x)
+  num <- length(x)
+  media <- mean(x)
+  error <- sd(x) / sqrt(num)
+  norm_estandar <- ( (x-media) )/error
+  norm_mmax <- ( (x-min)/(max-min) )
+  
+  list_norm <- list(norm_estandar, norm_mmax)
+  names(list_norm) <- c("Normalización Estándar","Normalización Min-Max")
+  return(list_norm)
+}
+
+```
+
+```{r funcion_normalizarpeso}
+
+normalizador(datos$PESO)
+
+```
+
+```{r funcion_normalizarestatura}
+
+normalizador(datos$ESTATURA)
+
+```
+
+8.Mediante un bucle `for`, cree un vector que contenga los primeros 100 elementos de la siguiente sucesión numérica:
+$\frac{1}{2}$ , $\frac{1}{4}$ , $\frac{1}{8}$ , $\frac{1}{16}$ , $\frac{1}{32}$,... 
+Para resolver el ejercicio, tenga en cuenta lo siguiente: $\frac{1}{2^{1}}$ , $\frac{1}{2^{2}}$ , $\frac{1}{2^{3}}$ , $\frac{1}{2^{4}}$ , $\frac{1}{2^{5}}$,...
+
+```{r funcion_fracciones}
+
+vector <- c()
+
+# Me permito hacer un bucle ya que es pequeño (R no trabaja bien con bucles grandes)
+
+for(i in 1:100)
+{
+  vector[i] <- 1/2 ^ i
+}
+
+sum(vector)
+
+```
+
+### Dataframes y gráficos
+
+En los siguientes ejercicios trabajará con el dataset mtcars, que consta de 32 coches y 11 variables. Descripción de las variables que se van a utilizar:
+
+* mpg: Millas recorridas por galón de combustible.
+* cyl: Número de cilindros.
+* hp: Caballos de fuerza.
+* wt: Peso (1000 libras).
+* qsec: Tiempo empleado en recorrer 1/4 de milla (segundos)
+
+
+9. Cuáles son los 5 coches más pesados?
+   ¿Qué coches tienen 8 cilindros y 175 o más caballos de fuerza? (ordene el resultado por caballos de fuerza)
+   ¿Cuál es el coche más rápido?
+   ¿Cuál es el coche que menos combustible consume?
+   ¿Cuál es el consumo medio de los coches de 4 cilindros?
+   
+```{r dfgraphs_importmtcars}
+
+mtcars <- mtcars
+str(mtcars)
+
+```
+
+```{r dfgraphs_preguntasmtcars1}
+
+mtcars[ order(-mtcars$wt)[1:5], ]
+
+```
+
+
+```{r dfgraphs_preguntasmtcars2}
+
+filtro <- mtcars$cyl == 8 & mtcars$hp >= 175
+filtered <- mtcars [filtro,]
+filtered [ order(filtered$hp), ]
+
+```
+
+```{r dfgraphs_preguntasmtcars3}
+
+mtcars[mtcars$qsec == max(mtcars$qsec),]
+
+```
+
+```{r dfgraphs_preguntasmtcars4}
+
+mtcars[mtcars$mpg == max(mtcars$mpg),]
+
+```
+
+```{r dfgraphs_preguntasmtcars5}
+
+print(paste0("El consumo medio de los de 4 cilindros es de: ", mean(mtcars[mtcars$cyl==4,]$mpg) ))
+
+```
+
+10. Cree un histograma del peso de los coches, y mediante la función abline dibuje: una línea vertical (roja) en la media de la distribución y otra línea vertical (verde) en la mediana de la distribución.
+
+```{r dfgraphs_histogramapesocoches}
+
+hist (mtcars$wt, main = "Histograma del peso", 
+      xlab = "Peso", 
+      ylab = "Freq")
+
+abline(v=mean(mtcars$wt),col=c("red"),lwd=3, lty=3)
+abline(v=median(mtcars$wt),col=c("#010101"),lwd=3, lty=1)
+
+legend("topright", # No cabe en otro sitio 
+       c("Media", 
+         "Mediana"), 
+       lty=c(3,1), 
+       col=c("red",
+             "#010101"), 
+       bty = "n")
+
+```
+
+11. Cree un gráfico que muestre la relación entre el peso y las millas por galón: mpg en función de wt. Interprete el gráfico.
+
+```{r dfgraphs_relacionpesompg}
+
+plot(mtcars$mpg,
+     mtcars$wt,
+     xlab = "MPG",
+     ylab = "Peso",
+     main = "Peso Vs MPG",
+     col = "black")
+
+```
+
+La gráfica del apartado 11 permite la visualización de la relación entre el consumo de combustible (millas por galón) y el peso de los coches.
+Como se puede ver, la relación conlleva que una disminución en el peso suele conllevar un mayor número de millas recorridas por galón de combustible.
+La relación, a falta de comprobación estadística con modelo (lm), parece ser ciertamente lineal.
+
+
+12. Convierta la variable cyl en un factor. A continuación, cree un diagrama de caja que represente los caballos de fuerza en función del número de cilindros. Interprete el gráfico.
+
+```{r dfgraphs_ultimoapartado}
+
+mtcars_ <- mtcars
+mtcars_$cyl <- as.factor(mtcars_$cyl)
+
+boxplot(mtcars_$hp ~ mtcars_$cyl,
+        xlab = "Cilindros del coche",
+        ylab = "Caballos de potencia",
+        main = "Relación entre los caballos y los cilindros",
+        outcol="red"
+       )
+
+```
+
+Como se puede observar, el gráfico está dividido en 3 boxplots: Uno para 4 cilindros, uno para 6 y uno para 8 cilindros.
+Se puede observar la evolución de las medianas como elemento más destacado (la mediana no se desvirtúa demasiado con outliers, mientras que la media sí). Las medianas indican un aumento de potencia conforme los coches tienen mayor cilindrada.
+
+Posteriormente , se puede observar el IQR (Rango intercuartílico) de los boxplots. Se observa como los coches con 6 cilindros apenas tienen variabilidad, mientras que los coches con 4 u 8 cilindros presentan una mayor (en especial los de 8, con los bigotes bastante separados).
+
+Entrando al dato, los coches con 4 cilindros tienen una potencia mediana de unos 95 CV, los de 6 de unos 110 CV y los de 8 cilindros rondan los 170 CV de mediana.
+
+Finalmente, comentar el tema del outlier. Sólo existe un valor outlier en todo el gráfico, y se encuentra en el boxplot de los 6 cilindros. Este trata de un coche con potencia cercana a los 200 Cv, cosa que destaca mucho en su grupo y que, por supuesto, se sale de los bigotes. Por ello, está marcado como rojo gracias a "outcol".
+
+
